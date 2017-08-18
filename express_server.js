@@ -20,13 +20,20 @@ app.get("/urls", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  //if user submittion does not include https://, include it
   let str = generateRandomString();
   if (urlDatabase[str]){
     while (urlDatabase[str]) {
       str = generateRandomString();
     }
   }
-  urlDatabase[str] = req.body['longURL'];
+  let longURL = req.body['longURL'];
+  let beginURL = 'http://';
+  if (!request.body['longURL'].includes('http://')){
+    longURL = beginURL + longURL;
+  }
+  urlDatabase[str] = longURL;
+
   res.redirect('/urls/' + str);
 });
 
@@ -43,11 +50,10 @@ app.get("/urls/:id", (req, res) => {
 
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL];
-  let protocol = 'http://';
-  if (!longURL.includes('http://')){
-    longURL = protocol +longURL;
+  if (!urlDatabase[shortURL]){
+    response.redirect('/urls');
   }
+  let longURL = urlDatabase[shortURL];
   res.redirect(longURL);
 });
 //request, response
@@ -55,6 +61,12 @@ app.get('/u/:shortURL', (req, res) => {
   res.json(urlDatabase);
 });
 */
+
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls');
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 
