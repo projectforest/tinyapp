@@ -27,11 +27,7 @@ app.post("/urls", (req, res) => {
       str = generateRandomString();
     }
   }
-  let longURL = req.body['longURL'];
-  let beginURL = 'http://';
-  if (!request.body['longURL'].includes('http://')){
-    longURL = beginURL + longURL;
-  }
+  let longURL = prependHTTP(req.body['longURL']);
   urlDatabase[str] = longURL;
 
   res.redirect('/urls/' + str);
@@ -48,10 +44,17 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.post("/urls/:id", (req, res) => {
+  let updatedURL = prependHTTP(req.body['updatedURL']);
+  urlDatabase[req.params.id] = updatedURL;
+  res.redirect('/urls/' + req.params.id);
+});
+
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]){
-    response.redirect('/urls');
+    
+    res.redirect(404, '/urls');
   }
   let longURL = urlDatabase[shortURL];
   res.redirect(longURL);
@@ -81,4 +84,14 @@ function generateRandomString() {
     str += chars[letter];
   }
   return str;
+}
+
+function prependHTTP(str){
+  if (str){
+    let beginURL = 'http://';
+    if (!str.includes(beginURL)){
+      str = beginURL + str;
+    }
+    return str;
+  }
 }

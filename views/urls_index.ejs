@@ -13,6 +13,11 @@
     <form class="form-inline" method="POST" id="delete" action="/urls/<%= key %>/delete">
       <button class="btn btn-default btn-xs" form="delete" type="submit">x</button>
     </form>
+    <form class="form-inline" method="GET" id="update" action="/urls/<%= key %>">
+        <button id="update" class="btn btn-default btn-xs" type="submit">
+            Edit
+        </button>    
+    </form>
     <% }) %>
   </ol>
 </body>

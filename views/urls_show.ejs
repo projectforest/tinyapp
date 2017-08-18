@@ -1,14 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <title>TinyApp</title>
 </head>
 <body>
-  <% if(urls.hasOwnProperty(shortURL)) { %>
-    <p><%= shortURL %>: <%= urls[shortURL] %></p>
-  <% } else { %>
-    <p>Shortened URL not found</p>
-  <% } %>
+  <form class="form-inline" method="POST" id="edit" action="/urls/<%= shortURL %>">
+    <label for="edit">Long URL</label>
+    <input id="edit" class="form-inline" name="updatedURL" value="<%= urls[shortURL] %>"></input>
+    <button class="btn btn-default btn-xs" type="submit">
+      Update
+    </button>
+  </form>
 </body>
 </html>
