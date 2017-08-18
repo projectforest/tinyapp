@@ -9,6 +9,9 @@
   <ol>
     <% Object.keys(urls).forEach(key => { %>
     <li><%= key %>: <%= urls[key] %></li>
+    <form class="form-inline" method="POST" id="delete" action="/urls/<%= key %>/delete">
+      <button class="btn btn-default btn-xs" form="delete" type="submit">x</button>
+    </form>
     <% }) %>
   </ol>
 </body>
