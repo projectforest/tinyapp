@@ -1,0 +1,14 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>TinyApp</title>
+</head>
+<body>
+  <% if(urls.hasOwnProperty(shortURL)) { %>
+    <p><%= shortURL %>: <%= urls[shortURL] %></p>
+  <% } else { %>
+    <p>Shortened URL not found</p>
+  <% } %>
+</body>
+</html>

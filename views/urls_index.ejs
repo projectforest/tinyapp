@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>TinyApp</title>
+</head>
+<body>
+  <%- include partials/_header %>
+  <a href="/shorten">Shorten</a> a new URL
+  <ol>
+    <% Object.keys(urls).forEach(key => { %>
+    <li><%= key %>: <%= urls[key] %></li>
+    <% }) %>
+  </ol>
+</body>
+</html>
