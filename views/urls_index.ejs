@@ -2,26 +2,33 @@
 <table class="table table-striped">
   <tr>
     <td>&nbsp;</td>
-    <td class="cleafix"><h4>Short URL</h4></td>
+    <td><h4>Short URL</h4></td>
     <td><h4>Long URL</h4></td>
     <td>&nbsp;</td>
   </tr>
-  <% Object.keys(urls).forEach((key, i) => { %>
-  <tr>
-    <td><%= i + 1 %></td>
-    <td>
-      <form class="form-inline" method="GET" id="update" action="/urls/<%= key %>">
-        <label for="update"><%= urls[key]['longURL'] %></label>
-        <button id="update" class="btn btn-default btn-xs" type="submit">
-          Update
-        </button>
-      </form>
-    </td>
-    <td>
-      <form class="form-inline" method="POST" id="delete" action="/urls/<%= key %>/delete">
-        <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
-      </form>
-    </td>
-  </tr>
-  <% }); %>
+  <% if(loggedIn) { %>
+    <% user_urls.forEach((key, i) => { %>
+    <tr>
+      <td><%= i + 1 %></td>
+      <td><a href="/u/<%= key %>">http://localhost:8080/u/<%= key.url_id %></a></td>
+      <td>
+        <form class="form-inline" method="GET" id="update" action="/urls/<%= key.url_id %>">
+          <label for="update"><%= key.url %></label>
+          <button id="update" class="btn btn-default btn-xs" type="submit">
+            Update
+          </button>
+        </form>
+      </td>
+      <td>
+        <form class="form-inline" method="POST" id="delete" action="/urls/<%= key.url_id %>/delete">
+          <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
+        </form>
+      </td>
+    </tr>
+    <% }); %>
+  <% } else { %>
+    <td>&nbsp;</td>
+    <td>login (or register) to view shortened URLs</td>
+    <td>&nbsp;</td>
+  <% } %>
 </table>

@@ -1,6 +1,6 @@
-var express = require("express");
-var app = express();
-var PORT = process.env.PORT || 8080;
+const express = require("express");
+const app = express();
+const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
 const morgan = require('morgan');
 
@@ -13,20 +13,26 @@ app.use(morgan('dev'));
 
 
 const urlDatabase = {
-  "9sm5xK": { longURL : "http://www.google.com", user_id: 'ggle'
+  '9sm5xK': { longURL: 'http://www.google.com', user_id: 'ggle'} 
 };
 
 const users = {
 };
+
 
 app.get("/urls", (req, res) => {
   //let templateVars = { username: req.cookies['username'], urls: urlDatabase };
   let templateVars = {
     urls: urlDatabase, 
     users: users,
-    user: req.cookies.user_id
+    user: req.cookies.user_id,
+    loggedIn: false
   }
-  console.log(templateVars);
+  if (checkLoggedIn(req)){
+    templateVars['loggedIn'] = true;
+    templateVars['user_urls'] = userURLS(req.cookies.user_id);
+    console.log(templateVars);
+  }
   res.render("urls_index", templateVars);
 });
 
@@ -132,7 +138,7 @@ app.get('/u/:shortURL', (req, res) => {
     
     res.redirect(404, '/urls');
   }
-  let longURL = urlDatabase[shortURL];
+  let longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 /*app.get("/urls.json", (req, res) => {
@@ -141,11 +147,14 @@ app.get('/u/:shortURL', (req, res) => {
 */
 
 app.post("/urls/:id/delete", (req, res) => {
-  let user_id = req.cookies.user_id;
-  let url_id = req.params.id;
-  if(urlDatabase[url_id]['user_id'] === user_id) {
-    delete urlDatabase[url_id];
-    res.redirect('/urls');
+  if (checkLoggedIn(req)) {
+    let user_id = req.cookies.user_id;
+    let url_id = req.params.id;
+    if (urlDatabase[url_id]['user_id'] === user_id) {
+      delete urlDatabase[url_id];
+      res.redirect('/urls');
+      return;
+    }
   }
   res.send(401, 'Error: attempt to delete link not authorized');
 });
@@ -179,4 +188,25 @@ function prependHTTP(str){
     }
     return str;
   }
+}
+
+function checkLoggedIn(req) {
+  if (req.cookies.user_id) {
+    for (let user in users) {
+      if (users[user]['id'] === req.cookies.user_id) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function userURLS(id) {
+  let user_urls = [];
+  Object.keys(urlDatabase).forEach(user, i) => {
+    if (urlDatabase[user].user_id === id) {
+      user_urls.push({url_id: u, url: urlDatabase[user].longURL});
+    }
+  }
+  return user_urls;
 }
