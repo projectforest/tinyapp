@@ -3,6 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
 const morgan = require('morgan');
+const bcrypt = require('bcrypt');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
@@ -60,11 +61,13 @@ app.post('/register', (req, res) => {
   else {
     users[user_id] = user_id;
   }
+  const email = req.body['email'];
+  const password = bcrypt.hashSync(req.body['password'], 10);
 
   users[user_id] = {
     id: user_id,
-    email: req.body['email'],
-    password: req.body['password']
+    email: email,
+    password: password
   }
   res.cookie('user_id', user_id);
   res.redirect('/urls');
@@ -77,9 +80,12 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   Object.keys(users).forEach(id => {
     console.log(users[id]['email']);
-    if(users[id]['email'] === req.body['email'] && users[id]['password'] === req.body['password']) {
-      res.cookie('user_id', users[id]['id']);
-      res.redirect('/urls');
+    if (users[id]['email'] === req.body['email']) {
+      if (bcrypt.compareSync(req.body['password'], users[id]['password'])) {
+        res.cookie('user_id', users[id]['id']);
+        res.redirect('/urls');
+        return;
+      }
     }
   });
   res.send(403, 'Error: Login credentials does not exist');
