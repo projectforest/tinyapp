@@ -1,16 +1,16 @@
-const express = require("express");
-const app = express();
-const PORT = process.env.PORT || 8080;
-const bodyParser = require("body-parser");
+const express = require('express');
+const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
+const cookieSession = require('cookie-session');
+const methodOverride = require('method-override');
 
-app.use(bodyParser.urlencoded({extended: true}));
+const app = express();
+const PORT = process.env.PORT || 8080;
 app.set("view engine", "ejs");
 
-const cookieParser = require('cookie-parser');
-const cookieSession = require('cookie-session');
-app.use(cookieParser());
+app.use(express.static('public'));
+app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
 app.use(cookieSession({
   name: 'session',
@@ -24,8 +24,21 @@ const urlDatabase = {
 const users = {
 };
 
+const templateVars = {
+  urls: urlDatabase,
+  users: users,
+  user: '',
+  error: ''
+};
 
-app.get("/urls", (req, res) => {
+app.get('/', (req, res) => {
+  if(checkLoggedIn(req)){
+    res.redirect('/urls');
+  }
+  res.redirect('/login');
+});
+
+app.get('/urls', (req, res) => {
   //let templateVars = { username: req.cookies['username'], urls: urlDatabase };
   let templateVars = {
     urls: urlDatabase, 
@@ -36,7 +49,9 @@ app.get("/urls", (req, res) => {
   if (checkLoggedIn(req)){
     templateVars['loggedIn'] = true;
     templateVars['user_urls'] = userURLS(req.session.user_id);
-    console.log(templateVars);
+  }
+  else{
+    res.status(401);
   }
   res.render("urls_index", templateVars);
 });
@@ -117,10 +132,11 @@ app.get('/urls/new', (req,res) => {
   
   //res.render("urls_new", { user: req.cookies['username']});
   //res.render("urls_new", { users: users, user: req.cookies['user_id']});
-  if(!req.session.user_id){
-    res.redirect('/login');
+  if(!checkLoggedIn(req)) {
+    res.status(401);
+    res.redirect('/urls');
+    return;
   }
-  console.log(req.session.user_id);
   let templateVars = { users: users, user: req.session.user_id };
   res.render('urls_new', templateVars);
 });
@@ -132,8 +148,22 @@ app.get("/urls/:id", (req, res) => {
     shortURL: req.params.id, 
     urls: urlDatabase,
     users: users,
-    user: req.session.user_id
+    user: req.session.user_id,
+    errors: {}
   };
+  if (!urlDatabase.hasOwnProperty(req.params.id)) {
+    templateVars.errors.urlExists = false;
+    res.status(401).render('urls_show', templateVars);
+    return;
+  }
+  else if (!checkLoggedIn(req)) {
+    templateVars.errors.loggedIn = false;
+    res.status(401).render('urls_show', templateVars);
+  }
+  else if (urlDatabase[req.params.id].user_id !== req.session.user_id) {
+    templateVars.errors.owner = false;
+    res.status(403).render('urls_show', templateVars);
+  }
   res.render("urls_show", templateVars);
 });
 
