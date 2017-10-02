@@ -9,9 +9,13 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 app.use(cookieParser());
 app.use(morgan('dev'));
-
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SECRET_KEY || 'developer']
+}));
 
 const urlDatabase = {
   '9sm5xK': { longURL: 'http://www.google.com', user_id: 'ggle'} 
@@ -26,12 +30,12 @@ app.get("/urls", (req, res) => {
   let templateVars = {
     urls: urlDatabase, 
     users: users,
-    user: req.cookies.user_id,
+    user: req.session.user_id,
     loggedIn: false
   }
   if (checkLoggedIn(req)){
     templateVars['loggedIn'] = true;
-    templateVars['user_urls'] = userURLS(req.cookies.user_id);
+    templateVars['user_urls'] = userURLS(req.session.user_id);
     console.log(templateVars);
   }
   res.render("urls_index", templateVars);
@@ -79,7 +83,6 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   Object.keys(users).forEach(id => {
-    console.log(users[id]['email']);
     if (users[id]['email'] === req.body['email']) {
       if (bcrypt.compareSync(req.body['password'], users[id]['password'])) {
         res.cookie('user_id', users[id]['id']);
@@ -101,7 +104,7 @@ app.post("/urls", (req, res) => {
     }
   }
   let longURL = prependHTTP(req.body['longURL']);
-  let user_id = req.cookies.user_id;
+  let user_id = req.session.user_id;
   urlDatabase[str] = {
     longURL: longURL, 
     user_id: user_id
@@ -110,10 +113,16 @@ app.post("/urls", (req, res) => {
   res.redirect('/urls/' + str);
 });
 
-app.get("/urls/new", (req,res) => {
+app.get('/urls/new', (req,res) => {
   
   //res.render("urls_new", { user: req.cookies['username']});
-  res.render("urls_new", { users: users, user: req.cookies['user_id']});
+  //res.render("urls_new", { users: users, user: req.cookies['user_id']});
+  if(!req.session.user_id){
+    res.redirect('/login');
+  }
+  console.log(req.session.user_id);
+  let templateVars = { users: users, user: req.session.user_id };
+  res.render('urls_new', templateVars);
 });
 
 //function(req, res)
@@ -123,13 +132,13 @@ app.get("/urls/:id", (req, res) => {
     shortURL: req.params.id, 
     urls: urlDatabase,
     users: users,
-    user: req.cookies.user_id
+    user: req.session.user_id
   };
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:id", (req, res) => {
-  let user_id = req.cookies.user_id;
+  let user_id = req.session.user_id;
   if(urlDatabase[req.params.id]['user_id'] === user_id) {
     let updatedURL = prependHTTP(req.body['updatedURL']);
     urlDatabase[req.params.id]['longURL'] = updatedURL;
@@ -154,19 +163,18 @@ app.get('/u/:shortURL', (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   if (checkLoggedIn(req)) {
-    let user_id = req.cookies.user_id;
+    let user_id = req.session.user_id;
     let url_id = req.params.id;
     if (urlDatabase[url_id]['user_id'] === user_id) {
       delete urlDatabase[url_id];
       res.redirect('/urls');
-      return;
     }
   }
   res.send(401, 'Error: attempt to delete link not authorized');
 });
 
 app.post('/logout', (req,res) => {
-  res.clearCookie('user_id');
+  delete req.session.user_id;
   res.redirect('/urls');
 });
 
@@ -197,9 +205,9 @@ function prependHTTP(str){
 }
 
 function checkLoggedIn(req) {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     for (let user in users) {
-      if (users[user]['id'] === req.cookies.user_id) {
+      if (users[user]['id'] === req.session.user_id) {
         return true;
       }
     }
