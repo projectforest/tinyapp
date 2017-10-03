@@ -1,12 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head></head>
-  <body style="font-size:20px; padding:50px;">
-    <% include partials/_header %>
-    <form action="/urls" method="post" style="margin:150px;">
-      <label for="longURL">Enter a URL:</label>
-      <input id="longURL" type="text" name="longURL" placeholder="http://" style="width: 300px">
-      <input type="submit" value="Submit">
-    </form>
-  </body>
-</html>
+<%- include partials/_header %>
+<table class="table">
+<tr>
+<td>
+<form class="form" action="/urls" method="post" style="margin-left: 300px; margin-top: 50px;">
+  <label class="label" for="longURL">Enter a URL:</label>
+  <input id="longURL" type="text" name="longURL" style="width: 200px;" placeholder="http://">
+  <button type="submit" class="btn btn-default" value="Shorten URL">Shorten URL</button>
+</form>
+</td>
+</tr>
+</table>

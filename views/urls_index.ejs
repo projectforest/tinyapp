@@ -1,13 +1,16 @@
 <%- include partials/_header %>
+<% if (Object.keys(errors).length !== 0) { %>
+  <p><%= errors.message %></p>
+<% } else { %>
 <table class="table table-striped">
   <% if(loggedIn) { %>
+    <tr>
+      <td>&nbsp;</td>
+      <td><h4>Short URL</h4></td>
+      <td><h4>Long URL</h4></td>
+      <td>&nbsp;</td>
+    </tr>
     <% user_urls.forEach((key, i) => { %>
-  <tr>
-    <td>&nbsp;</td>
-    <td><h4>Short URL</h4></td>
-    <td><h4>Long URL</h4></td>
-    <td>&nbsp;</td>
-  </tr>
     <tr>
       <td><%= i + 1 %></td>
       <td><a href="/u/<%= key %>">http://localhost:8080/u/<%= key.url_id %></a></td>
@@ -26,9 +29,6 @@
       </td>
     </tr>
     <% }); %>
-  <% } else { %>
-    <td>&nbsp;</td>
-    <td><a href="/login">Login</a> (or <a href="/register">register</a>) to continue</td>
-    <td>&nbsp;</td>
   <% } %>
 </table>
+<% } %>

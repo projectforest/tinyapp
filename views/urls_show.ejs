@@ -1,15 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>TinyApp</title>
-</head>
-<body>
-  <form class="form-inline" method="POST" id="edit" action="/urls/<%= shortURL %>">
-    <label for="edit">Long URL</label>
-    <input id="edit" class="form-inline" name="updatedURL" value="<%= urls[shortURL].longURL %>"></input>
-    <button class="btn btn-default btn-xs" type="submit">
-      Update
-    </button>
-  </form>
-</body>
-</html>
+<%- include partials/_header %>
+  <% if(Object.keys(errors).length !== 0) { %>
+    <p><%= errors.message %></p>
+  <% } else { %>
+  <table class="table table-striped">
+    <tr class="table-success">
+      <td>&nbsp;</td>
+      <td>
+        <h4>Short URL: <a href="/u/<%= shortURL %>">http://localhost/u/<%= shortURL %></a></h4>
+      </td>
+      <td>
+        <h4>
+          <form class="form-inline" method="POST" id="edit" action="/urls/<%= shortURL %>">
+            <label for="edit">Long URL</label>
+            <input id="edit" class="form-inline" name="updatedURL" value="<%= urls[shortURL].longURL %>"></input>
+            <button class="btn btn-default btn-xs" type="submit">
+              Update
+            </button>
+          </form>
+        </h4>
+      </td>
+      <td>
+        <form class="form-inline" method="POST" id="delete" action="/urls/<%= shortURL %>/delete">
+          <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
+        </form>
+      </td>
+    </tr>
+  </table>
+  <% } %>
