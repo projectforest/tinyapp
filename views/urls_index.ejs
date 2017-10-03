@@ -2,18 +2,19 @@
 <% if(error) { %>
   <p><%= error %></p>
 <% } else { %>
-<table class="table table-striped">
+<table class="table">
   <% if(loggedIn) { %>
     <tr>
-      <td>&nbsp;</td>
-      <td><h4>Short URL</h4></td>
-      <td><h4>Long URL</h4></td>
-      <td>&nbsp;</td>
+      <td class="col-md-2">Date Created</td>
+      <td class="col-md-4">Short URL</td>
+      <td class="col-md-4">Long URL</td>
+      <td class="col-md-2">Visits</td>
+      <td class="col-md-3">&nbsp;</td>
     </tr>
     <% user_urls.forEach((key, i) => { %>
     <tr>
-      <td><%= i + 1 %></td>
-      <td><a href="/u/<%= key %>">http://localhost:8080/u/<%= key.url_id %></a></td>
+      <td><%= key.date %></td>
+      <td><a href="/u/<%= key.urlID %>">http://localhost/u/<%= k.urlID %></a></td>
       <td>
         <form class="form-inline" method="GET" id="update" action="/urls/<%= key.url_id %>">
           <label for="update"><%= key.url %></label>
@@ -21,6 +22,14 @@
             Update
           </button>
         </form>
+      </td>
+      <td>
+        <%= key.visits.visits %>
+        <% if(key.visits.unique) { %>
+          (<%= key.visits.unique %>)
+        <% } else { %>
+          (0)
+        <% } %>
       </td>
       <td>
         <form class="form-inline" method="POST" id="delete" action="/urls/<%= key.url_id %>/delete">

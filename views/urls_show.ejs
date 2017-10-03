@@ -2,22 +2,32 @@
   <% if(error) { %>
     <p><%= error %></p>
   <% } else { %>
-  <table class="table table-striped">
-    <tr class="table-success">
-      <td>&nbsp;</td>
+  <table class="table">
+    <tr>
+      <td class="col-md-2">Date Created</td>
+      <td class="col-md-4">Short URL</td>
+      <td class="col-md-4">Long URL</td>
+      <td class="col-md-2">Visits (Unique)</td>
+      <td class="col-md-3">&nbsp;</td>
+    </tr>
+    <tr>
+      <td><%= urls[shortURL].date %></td>
+      <td><a href="/u/<%= shortURL %>">http://localhost/u/<%= shortURL %></a></td>
       <td>
-        <h4>Short URL: <a href="/u/<%= shortURL %>">http://localhost/u/<%= shortURL %></a></h4>
+        <form class="form-inline" method="POST" id="edit" action="/urls/<%= shortURL %>">
+          <input id="edit" class="form-inline" name="updatedURL" value="<%= urls[shortURL].longURL %>"></input>
+          <button class="btn btn-default btn-xs" type="submit">
+            Update
+          </button>
+        </form>
       </td>
       <td>
-        <h4>
-          <form class="form-inline" method="POST" id="edit" action="/urls/<%= shortURL %>">
-            <label for="edit">Long URL</label>
-            <input id="edit" class="form-inline" name="updatedURL" value="<%= urls[shortURL].longURL %>"></input>
-            <button class="btn btn-default btn-xs" type="submit">
-              Update
-            </button>
-          </form>
-        </h4>
+        <%= urls[shortURL].visits.visits %>
+        <% if(urls[shortURL].visits.unique) { %>
+          (<%= urls[shortURL].visits.unique %>)
+        <% } else { %>
+          (0)
+        <% } %>
       </td>
       <td>
         <form class="form-inline" method="POST" id="delete" action="/urls/<%= shortURL %>/delete">

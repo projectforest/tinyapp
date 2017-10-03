@@ -133,22 +133,35 @@ app.post('/login', (req, res) => {
   
 });
 
-app.post("/urls", (req, res) => {
-  //if user submittion does not include https://, include it
-  let str = generateRandomString();
-  if (urlDatabase[str]){
-    while (urlDatabase[str]) {
-      str = generateRandomString();
+app.post('/urls', (req, res) => {
+  if (isLoggedIn(req)) {
+    let str = generateRandomString();
+    if (urlDatabase[str]){
+      while (urlDatabase[str]) {
+        str = generateRandomString();
+      }
     }
+    let longURL = prependHTTP(req.body['longURL']);
+    let user_id = req.session.user_id;
+
+    let d = new Date();
+    let today = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+
+    let visits = {
+      visits: 0,
+      unique: 0,
+      ip_address: req.connection.remoteAddress
+    }
+
+    urlDatabase[str] = {
+      longURL: longURL, 
+      user_id: user_id,
+      date: today,
+      visits: visits
+    };
+    res.redirect('/urls/' + str);
   }
-  let longURL = prependHTTP(req.body['longURL']);
-  let user_id = req.session.user_id;
-  urlDatabase[str] = {
-    longURL: longURL, 
-    user_id: user_id
-  }
-  console.log(urlDatabase);
-  res.redirect('/urls/' + str);
+  res.status(401).send('Error: must be logged in to access this page');
 });
 
 app.get('/urls/new', (req,res) => {
@@ -205,16 +218,19 @@ app.post("/urls/:id", (req, res) => {
     templateVars.error = false;
     return;
   }
-  if(urlDatabase[req.params.id]['user_id'] === req.session.user_id) {
-    let updatedURL = prependHTTP(req.body['updatedURL']);
-    urlDatabase[req.params.id]['longURL'] = updatedURL;
-    res.redirect('/urls/' + req.params.id);
-  }
+  let updatedURL = prependHTTP(req.body['updatedURL']);
+  urlDatabase[req.params.id]['longURL'] = updatedURL;
+  res.redirect('/urls/' + req.params.id);
+  return;
 });
 
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]){
+    if(req.connection.remoteAddress !== urlDatabase[shortURL].visits.ip_address) {
+      urlDatabase[shortURL].visits.unique++;
+    }
+    urlDatabase[shortURL].visits.visits++;
     let longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
     return;
@@ -246,7 +262,7 @@ app.post('/logout', (req,res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 
 
 });
@@ -286,7 +302,12 @@ function userURLS(id) {
   let user_urls = [];
   Object.keys(urlDatabase).forEach(user, i) => {
     if (urlDatabase[user].user_id === id) {
-      user_urls.push({url_id: u, url: urlDatabase[user].longURL});
+      user_urls.push({
+        url_id: user, 
+        url: urlDatabase[user].longURL,
+        date: urlDatabase[user].date,
+        visits: urlDatabase[user].visits
+      });
     }
   }
   return user_urls;
