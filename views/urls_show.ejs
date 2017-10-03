@@ -1,6 +1,6 @@
 <%- include partials/_header %>
-  <% if(Object.keys(errors).length !== 0) { %>
-    <p><%= errors.message %></p>
+  <% if(error) { %>
+    <p><%= error %></p>
   <% } else { %>
   <table class="table table-striped">
     <tr class="table-success">
