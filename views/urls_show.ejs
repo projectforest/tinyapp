@@ -11,26 +11,26 @@
       <td class="col-md-3">&nbsp;</td>
     </tr>
     <tr>
-      <td><%= urls[shortURL].date %></td>
-      <td><a href="/u/<%= shortURL %>">http://localhost/u/<%= shortURL %></a></td>
+      <td><%= urls[url].date %></td>
+      <td><a href="/u/<%= url %>">http://localhost/u/<%= url %></a></td>
       <td>
-        <form class="form-inline" method="POST" id="edit" action="/urls/<%= shortURL %>">
-          <input id="edit" name="updatedURL" value="<%= urls[shortURL].longURL %>"></input>
+        <form class="form-inline" method="POST" id="edit" action="/urls/<%= url %>">
+          <input id="edit" name="updatedURL" value="<%= urls[url].longURL %>" class="input input-group"></input>
           <button id="edit" class="btn btn-default btn-xs" type="submit">
             Update
           </button>
         </form>
       </td>
       <td>
-        <%= urls[shortURL].visits.visits %>
-        <% if(urls[shortURL].visits.unique) { %>
-          (<%= urls[shortURL].visits.unique %>)
+        <%= urls[templateVars.error = false].visits.visits %>
+        <% if(urls[url].visits.unique) { %>
+          (<%= urls[url].visits.unique %>)
         <% } else { %>
           (0)
         <% } %>
       </td>
       <td>
-        <form class="form-inline" method="POST" id="delete" action="/urls/<%= shortURL %>/delete">
+        <form class="form-inline" method="POST" id="delete" action="/urls/<%= url %>/delete">
           <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
         </form>
       </td>

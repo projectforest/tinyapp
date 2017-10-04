@@ -34,6 +34,7 @@ const templateVars = {
 app.get('/', (req, res) => {
   if(checkLoggedIn(req)){
     res.redirect('/urls');
+    return;
   }
   res.redirect('/login');
 });
@@ -116,18 +117,29 @@ app.post('/login', (req, res) => {
     }
   });
   sendError(401, res, "Error: Login credentials does not exist in database");
-  return;
   
 });
 
 app.post('/urls', (req, res) => {
   if (isLoggedIn(req)) {
-    let str = generateRandomString();
-    if (urlDatabase[str]){
-      while (urlDatabase[str]) {
-        str = generateRandomString();
+    // generate another URL if shortURL alreadys exists in database
+    if(!req.body['longURL']) {
+      sendError(400, res, 'Error: Please specify a URL to shorten');
+      return;
+    }
+    let str = '';
+    if(!req.body['custom']) {
+      str = generateRandomString();
+      if (urlDatabase[str]) {
+        while (urlDatabase[str]) {
+          str = generateRandomString();
+        }
       }
     }
+    else {
+      str = req.body['custom'];
+    }
+
     let longURL = prependHTTP(req.body['longURL']);
     let user_id = req.session.user_id;
 
@@ -147,6 +159,7 @@ app.post('/urls', (req, res) => {
       visits: visits
     };
     res.redirect('/urls/' + str);
+    return;
   }
   sendError(401, res, "Error: must be logged in to access this page");
 });
@@ -164,8 +177,7 @@ app.get('/urls/new', (req,res) => {
 //function(req, res)
 
 app.get("/urls/:id", (req, res) => {
-  templateVars.shortURL = req.params.id;
-  templateVars.user = req.session.user_id;
+  templateVars.url = req.params.id;
   if (!urlDatabase.hasOwnProperty(req.params.id)) {
     sendError(404, res, "Error: This short URL does not exist");
 
@@ -201,9 +213,13 @@ app.post("/urls/:id", (req, res) => {
   if (req.body['updatedURL']) {
     let updatedURL = prependHTTP(req.body['updatedURL']);
     urlDatabase[req.params.id]['longURL'] = updatedURL;
+    res.redirect('/urls/' + req.params.id);
   }
-  res.redirect('/urls/' + req.params.id);
-  return;
+  else{
+    sendError(400, res, "Error: specify an URL to be updated");
+    return;
+  }
+  
 });
 
 app.get('/u/:shortURL', (req, res) => {
@@ -225,7 +241,7 @@ app.get('/u/:shortURL', (req, res) => {
     res.redirect(longURL);
     return;
   }
-  sendError(404, res, "Error: This short URL has not yet been created");
+  sendError(404, res, "Error: This short URL has not been created");
 });
 /*app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -239,9 +255,10 @@ app.post("/urls/:id/delete", (req, res) => {
     if (urlDatabase[url_id]['user_id'] === user_id) {
       delete urlDatabase[url_id];
       res.redirect('/urls');
+      return;
     }
   }
-  sendError(401, 'Error: attempt to delete link not authorized');
+  sendError(400, 'Error: attempt to delete link not authorized');
 });
 
 app.post('/logout', (req,res) => {

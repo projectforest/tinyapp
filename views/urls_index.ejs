@@ -11,28 +11,28 @@
       <td class="col-md-2">Visits</td>
       <td class="col-md-3">&nbsp;</td>
     </tr>
-    <% user_urls.forEach((key, i) => { %>
+    <% user_urls.forEach((url, i) => { %>
     <tr>
-      <td><%= key.date %></td>
-      <td><a href="/u/<%= key.urlID %>">http://localhost/u/<%= k.urlID %></a></td>
+      <td><%= url.date %></td>
+      <td><a href="/u/<%= url.urlID %>">http://localhost/u/<%= url.urlID %></a></td>
       <td>
-        <form class="form-inline" method="GET" id="update" action="/urls/<%= key.url_id %>">
-          <label for="update"><%= key.url %></label>
+        <form class="form-inline" method="GET" id="update" action="/urls/<%= url.url_id %>">
+          <label for="update"><%= url.url %></label>
           <button id="update" class="btn btn-default btn-xs" type="submit">
             Update
           </button>
         </form>
       </td>
       <td>
-        <%= key.visits.visits %>
-        <% if(key.visits.unique) { %>
-          (<%= key.visits.unique %>)
+        <%= url.visits.visits %>
+        <% if(url.visits.unique) { %>
+          (<%= url.visits.unique %>)
         <% } else { %>
           (0)
         <% } %>
       </td>
       <td>
-        <form class="form-inline" method="POST" id="delete" action="/urls/<%= key.url_id %>/delete">
+        <form class="form-inline" method="POST" id="delete" action="/urls/<%= url.url_id %>/delete">
           <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
         </form>
       </td>

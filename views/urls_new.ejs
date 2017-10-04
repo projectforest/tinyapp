@@ -2,11 +2,32 @@
 <table class="table">
 <tr>
 <td>
-<form class="form" action="/urls" method="post" style="margin-left: 300px; margin-top: 50px;">
-  <label class="label" for="longURL">Enter a URL:</label>
-  <input id="longURL" type="text" name="longURL" style="width: 200px;" placeholder="http://">
-  <button type="submit" class="btn btn-default" value="Shorten URL">Shorten URL</button>
+<form class="form" action="/urls" method="post" style="margin-top: 30px;">
+  <div class="row">
+    <div class="col-md-4">&nbsp;</div>
+      <div class="form-group col-md-4">
+        <label for="longURL" class="control-label">Link to shorten:</label><br>
+          <input id="longURL" name="longURL" type="text" class="form-control" placeholder="http://example.com">
+      </div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-md-4">&nbsp;</div>
+      <div class="form-group col-md-4 form-inline">
+        <label for="custom" class="control-label">Customize URL:</label>
+        <br><br>
+        <label for="custom" class="control-label">http://localhost:3000/u/</label>
+        <input id="custom" name="custom" type="text" class="form-control" id="name">
+      </div>
+    </div>
+    <br>
+      <div class="row">
+        <div class="col-md-4">&nbsp;</div>
+        <div class="form-group col-md-4">
+    <button type="submit" class="btn btn-default" value="Shorten URL">Shorten URL</button>
+  </div>
 </form>
 </td>
 </tr>
 </table>
+<%- include partials/_footer %>
