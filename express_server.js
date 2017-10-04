@@ -46,12 +46,7 @@ app.get('/urls', (req, res) => {
     res.render('urls_index', templateVars);
     return;
   }
-  else{
-    templateVars.error = "Error: must be logged in to access this page";
-    res.status(401).render('urls_index', templateVars);
-    templateVars.error = false;
-    return;
-  }
+  sendError(401, res, "Error: must be logged in to access this page");
   
 });
 
@@ -65,17 +60,13 @@ app.get('/register', (req, res) =>{
 
 app.post('/register', (req, res) => {
   if (!req.body['email'] || !req.body['password']){
-    templateVars.error = "Error: Email addrress/password were empty";
-    res.status(400).render('urls_index', templateVars);
-    templateVars.error = false;
+    sendError(400, res, "Error: Email addrress/password were empty");
     return;
   }
 
   Object.keys(users).forEach(id => {
     if (users[id]['email'] === req.body['email']){
-      templateVars.error = "Error: email address already in use";
-      res.status(400).render('urls_index', templateVars);
-      templateVars.error = false;
+      sendError(400, res, "Error: Email addrress already in use");
       return;
     }
   });
@@ -111,9 +102,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   if (!req.body['email'] || !req.body['password']) {
-    templateVars.error = 'Error: Email address/password were empty';
-    res.status(400).render('urls_index', templateVars);
-    templateVars.error = false;
+    sendError(400, res, "Error: Email addrress/password were empty");
     return;
   }
 
@@ -126,9 +115,7 @@ app.post('/login', (req, res) => {
       }
     }
   });
-  templateVars.error = 'Error: Login credentials does not exist in database';
-  res.status(401).render('urls', templateVars);
-  templateVars.error = false;
+  sendError(401, res, "Error: Login credentials does not exist in database");
   return;
   
 });
@@ -150,9 +137,9 @@ app.post('/urls', (req, res) => {
     let visits = {
       visits: 0,
       unique: 0,
-      ip_address: req.connection.remoteAddress
-    }
-
+      ip_address: []
+    };
+    console.log(visits);
     urlDatabase[str] = {
       longURL: longURL, 
       user_id: user_id,
@@ -161,15 +148,14 @@ app.post('/urls', (req, res) => {
     };
     res.redirect('/urls/' + str);
   }
-  res.status(401).send('Error: must be logged in to access this page');
+  sendError(401, res, "Error: must be logged in to access this page");
 });
 
 app.get('/urls/new', (req,res) => {
   templateVars.user = req.session.user_id;
   if(!checkLoggedIn(req)) {
-    templateVars.error = "Error: mus be logged in to access this page".
-    res.status(401).render('urls_show', templateVars);
-    templateVars.error = false;
+    sendError(401, res, "Error: mus be logged in to access this page").
+
     return;
   }
   res.render('urls_new', templateVars);
@@ -181,45 +167,41 @@ app.get("/urls/:id", (req, res) => {
   templateVars.shortURL = req.params.id;
   templateVars.user = req.session.user_id;
   if (!urlDatabase.hasOwnProperty(req.params.id)) {
-    templateVars.error = "Error: this short URL does not exist".
-    res.status(404).render('urls_show', templateVars);
-    templateVars.error = false;
+    sendError(404, res, "Error: This short URL does not exist");
+
     return;
   }
   else if (!checkLoggedIn(req)) {
-    templateVars.error = "Error: must be logged in to access this page".
-    res.status(401).render('urls_show', templateVars);
-    templateVars.error = false;
+    sendError(401, res, "Error: must be logged in to access this page");
+    return;
+
   }
   else if (urlDatabase[req.params.id].user_id !== req.session.user_id) {
-    templateVars.error = "Error: Insufficient credentials to access this short URL".
-    res.status(403).render('urls_show', templateVars);
-    templateVars.error = false;
+    sendError(403, res, "Error: Insufficient credentials to access this short URL");
+    return;
   }
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls/:id", (req, res) => {
   if(!urlDatabase.hasOwnProperty(req.params.id)) {
-    templateVars.error = 'Error: This short URL does not exist';
-    res.status(404).render('urls_show', templateVars);
-    templateVars.error = false;
+    sendError(404, res, "Error: This short URL does not exist");
+
     return;
   } 
   else if(!isLoggedIn(req)) {
-    templateVars.error = 'Error: Must be logged into access this page';
-    res.status(401).render('urls_show', templateVars);
-    templateVars.error = false;
+    
+    sendError(401, res, "Error: Must be logged into access this page'");
     return;
   } 
   else if(urlDatabase[req.params.id].userID !== req.session.user_id) {
-    templateVars.error = 'Error: Insufficient credentials to access this short URL';
-    res.status(403).render('urls_show', templateVars);
-    templateVars.error = false;
+    sendError(403, res, "Error: Insufficient credentials to access this short URL");
     return;
   }
-  let updatedURL = prependHTTP(req.body['updatedURL']);
-  urlDatabase[req.params.id]['longURL'] = updatedURL;
+  if (req.body['updatedURL']) {
+    let updatedURL = prependHTTP(req.body['updatedURL']);
+    urlDatabase[req.params.id]['longURL'] = updatedURL;
+  }
   res.redirect('/urls/' + req.params.id);
   return;
 });
@@ -227,17 +209,23 @@ app.post("/urls/:id", (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]){
-    if(req.connection.remoteAddress !== urlDatabase[shortURL].visits.ip_address) {
-      urlDatabase[shortURL].visits.unique++;
+    if(urlDatabase[shortURL].visits.ip_address.length === 0) {
+      urlDatabase[shortURL].visits.ip_address.push(req.connection.remoteAddress);
+    }
+    else{
+      urlDatabase[shortURL].visits.ip_address.forEach(ip => {
+        if (req.connection.remoteAddress !== ip){
+          urlDatabase[shortURL].visits.ip_address.push(req.connection.remoteAddress);
+          urlDatabase[shortURL].visits.unique++;
+        }
+      });
     }
     urlDatabase[shortURL].visits.visits++;
     let longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
     return;
   }
-  templateVars.error = 'Error: This short URL has not yet been created';
-  res.status(404).render('urls_index', templateVars);
-  templateVars.error = false;
+  sendError(404, res, "Error: This short URL has not yet been created");
 });
 /*app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -253,7 +241,7 @@ app.post("/urls/:id/delete", (req, res) => {
       res.redirect('/urls');
     }
   }
-  res.send(401, 'Error: attempt to delete link not authorized');
+  sendError(401, 'Error: attempt to delete link not authorized');
 });
 
 app.post('/logout', (req,res) => {
@@ -279,9 +267,10 @@ function generateRandomString() {
 
 function prependHTTP(str){
   if (str){
+    let output = '';
     let beginURL = 'http://';
     if (!str.includes(beginURL)){
-      str = beginURL + str;
+      output = beginURL + str;
     }
     return str;
   }
@@ -311,4 +300,11 @@ function userURLS(id) {
     }
   }
   return user_urls;
+}
+
+function sendError(status, res, error) {
+  templateVars.error = error;
+  res.status(status).render('urls_index', templateVars);
+  templateVars.error = false;
+  return;
 }
