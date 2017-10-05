@@ -17,6 +17,7 @@ app.use(cookieSession({
   keys: [process.env.SECRET_KEY || 'developer']
 }));
 
+app.use(methodOverride('_method'));
 const urlDatabase = {
   '9sm5xK': { longURL: 'http://www.google.com', user_id: 'ggle'} 
 };
@@ -65,12 +66,12 @@ app.post('/register', (req, res) => {
     return;
   }
 
-  Object.keys(users).forEach(id => {
+  for (id in users) {
     if (users[id]['email'] === req.body['email']){
       sendError(400, res, "Error: Email addrress already in use");
       return;
     }
-  });
+  }
 
   let user_id = generateRandomString();
   if (users[user_id]) {
@@ -89,8 +90,9 @@ app.post('/register', (req, res) => {
     email: email,
     password: password
   }
-  res.cookie('user_id', user_id);
+  res.session.user_id = user_id;
   res.redirect('/urls');
+  return;
 
 });
 app.get('/login', (req, res) => {
@@ -107,15 +109,15 @@ app.post('/login', (req, res) => {
     return;
   }
 
-  Object.keys(users).forEach(id => {
+  for (id in users) {
     if (users[id]['email'] === req.body['email']) {
       if (bcrypt.compareSync(req.body['password'], users[id]['password'])) {
-        res.cookie('user_id', users[id]['id']);
+        res.session.user_id = users[id]['id'];
         res.redirect('/urls');
         return;
       }
     }
-  });
+  }
   sendError(401, res, "Error: Login credentials does not exist in database");
   
 });
@@ -149,7 +151,7 @@ app.post('/urls', (req, res) => {
     let visits = {
       visits: 0,
       unique: 0,
-      ip_address: []
+      ip_addresses: []
     };
     console.log(visits);
     urlDatabase[str] = {
@@ -177,7 +179,6 @@ app.get('/urls/new', (req,res) => {
 //function(req, res)
 
 app.get("/urls/:id", (req, res) => {
-  templateVars.url = req.params.id;
   if (!urlDatabase.hasOwnProperty(req.params.id)) {
     sendError(404, res, "Error: This short URL does not exist");
 
@@ -192,10 +193,11 @@ app.get("/urls/:id", (req, res) => {
     sendError(403, res, "Error: Insufficient credentials to access this short URL");
     return;
   }
+  templateVars.url = req.params.id;
   res.render("urls_show", templateVars);
 });
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   if(!urlDatabase.hasOwnProperty(req.params.id)) {
     sendError(404, res, "Error: This short URL does not exist");
 
@@ -206,7 +208,7 @@ app.post("/urls/:id", (req, res) => {
     sendError(401, res, "Error: Must be logged into access this page'");
     return;
   } 
-  else if(urlDatabase[req.params.id].userID !== req.session.user_id) {
+  else if(urlDatabase[req.params.id].user_id !== req.session.user_id) {
     sendError(403, res, "Error: Insufficient credentials to access this short URL");
     return;
   }
@@ -225,17 +227,29 @@ app.post("/urls/:id", (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
   if (!urlDatabase[shortURL]){
-    if(urlDatabase[shortURL].visits.ip_address.length === 0) {
-      urlDatabase[shortURL].visits.ip_address.push(req.connection.remoteAddress);
+    let dateTime = new Date().toLocaleString("en-US", {timeZone: "America/Vancouver"});
+    if (urlDatabase[shortURL].visits.ip_addresses.length === 0) {
+      urlDatabase[shortURL].visits.ip_addresses.push({
+        ip: req.connection.remoteAddress,
+        dateTime: dateTime}
+        );
+      urlDatabase[shortURL].visits.unique++;
     }
-    else{
-      urlDatabase[shortURL].visits.ip_address.forEach(ip => {
-        if (req.connection.remoteAddress !== ip){
-          urlDatabase[shortURL].visits.ip_address.push(req.connection.remoteAddress);
-          urlDatabase[shortURL].visits.unique++;
-        }
+    let unique = true;
+    for (ip_address of urlDatabase[shortURL].visits.ip_addresses){
+      if (req.connection.remoteAddress === ip_address['ip']) {
+        unique = false;
+        break;
+      }
+    }
+    if (unique){
+      urlDatabase[shortURL].visits.ip_addresses.push({
+        ip: req.connection.remoteAddress,
+        dateTime: dateTime
       });
+      urlDatabase[shortURL].visits.unique++;
     }
+  
     urlDatabase[shortURL].visits.visits++;
     let longURL = urlDatabase[shortURL].longURL;
     res.redirect(longURL);
@@ -248,7 +262,7 @@ app.get('/u/:shortURL', (req, res) => {
 });
 */
 
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id/delete", (req, res) => {
   if (checkLoggedIn(req)) {
     let user_id = req.session.user_id;
     let url_id = req.params.id;
@@ -261,7 +275,7 @@ app.post("/urls/:id/delete", (req, res) => {
   sendError(400, 'Error: attempt to delete link not authorized');
 });
 
-app.post('/logout', (req,res) => {
+app.delete('/logout', (req,res) => {
   delete req.session.user_id;
   res.redirect('/urls');
 });

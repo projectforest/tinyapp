@@ -7,14 +7,14 @@
       <td class="col-md-2">Date Created</td>
       <td class="col-md-4">Short URL</td>
       <td class="col-md-4">Long URL</td>
-      <td class="col-md-2">Visits (Unique)</td>
+      <td class="col-md-2">Unique visits</td>
       <td class="col-md-3">&nbsp;</td>
     </tr>
     <tr>
       <td><%= urls[url].date %></td>
       <td><a href="/u/<%= url %>">http://localhost/u/<%= url %></a></td>
       <td>
-        <form class="form-inline" method="POST" id="edit" action="/urls/<%= url %>">
+        <form class="form-inline" method="POST" id="edit" action="/urls/<%= url %>?_method=PUT">
           <input id="edit" name="updatedURL" value="<%= urls[url].longURL %>" class="input input-group"></input>
           <button id="edit" class="btn btn-default btn-xs" type="submit">
             Update
@@ -30,10 +30,25 @@
         <% } %>
       </td>
       <td>
-        <form class="form-inline" method="POST" id="delete" action="/urls/<%= url %>/delete">
+        <form class="form-inline" method="POST" id="delete" action="/urls/<%= url %>/delete?_method=DELETE">
           <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
         </form>
       </td>
     </tr>
+  </table>
+  <table class="table" style="width: auto;">
+    <th class="text-center" colspan="2">
+      <h5>Visitors</h5>
+    </th>
+    <tr>
+      <td class="col-md-6 text-right"><b>Date/Time<b></td>
+      <td class="col-md-6 text-right"><b>IP<b></td>
+    </tr>
+    <% for(ip_address of urls[url].visits.ip_addresses) { %>
+      <tr>
+        <td class="text-right"><%= ip_address.dateTime %></td>
+        <td class="text-right"><%= ip_address.ip %>
+      </tr>
+    <% } %>
   </table>
   <% } %>
