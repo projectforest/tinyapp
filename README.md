@@ -10,7 +10,7 @@ Full stack" web app built using node and express, allowing users to shorten long
 In terminal:
 ```js
 git clone https://github.com/projectforest/tinyapp
-cd tiny-app
+cd tinyapp
 npm install
 npm start
 ```
