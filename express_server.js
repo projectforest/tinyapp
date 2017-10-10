@@ -7,8 +7,8 @@ const methodOverride = require('method-override');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
-app.set("view engine", "ejs");
 
+app.set("view engine", "ejs");
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(morgan('dev'));
@@ -16,14 +16,13 @@ app.use(cookieSession({
   name: 'session',
   keys: [process.env.SECRET_KEY || 'developer']
 }));
-
 app.use(methodOverride('_method'));
+
 const urlDatabase = {
   '9sm5xK': { longURL: 'http://www.google.com', user_id: 'ggle'} 
 };
 
-const users = {
-};
+const users = {};
 
 const templateVars = {
   urls: urlDatabase,
@@ -31,6 +30,7 @@ const templateVars = {
   user: '',
   error: ''
 };
+
 
 app.get('/', (req, res) => {
   if(checkLoggedIn(req)){
@@ -50,6 +50,48 @@ app.get('/urls', (req, res) => {
   }
   sendError(401, res, "Error: must be logged in to access this page");
   
+});
+
+app.post('/urls', (req, res) => {
+  if (checkLoggedIn(req)) {
+    if(!req.body['longURL']) {
+      sendError(400, res, 'Error: Please specify a URL to shorten');
+      return;
+    }
+    let str = '';
+    if(!req.body['custom']) {
+      str = generateRandomString();
+      if (urlDatabase[str]) {
+        while (urlDatabase[str]) {
+          str = generateRandomString();
+        }
+      }
+    }
+    else {
+      str = req.body['custom'];
+    }
+
+    let longURL = prependHTTP(req.body['longURL']);
+    let user_id = req.session.user_id;
+
+    let d = new Date();
+    let today = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+
+    let visits = {
+      visits: 0,
+      unique: 0,
+      ip_addresses: []
+    };
+    urlDatabase[str] = {
+      longURL: longURL, 
+      user_id: user_id,
+      date: today,
+      visits: visits
+    };
+    res.redirect('/urls/' + str);
+    return;
+  }
+  sendError(401, res, "Error: must be logged in to access this page");
 });
 
 app.get('/register', (req, res) =>{
@@ -90,7 +132,7 @@ app.post('/register', (req, res) => {
     email: email,
     password: password
   }
-  res.session.user_id = user_id;
+  req.session.user_id = user_id;
   res.redirect('/urls');
   return;
 
@@ -112,7 +154,7 @@ app.post('/login', (req, res) => {
   for (id in users) {
     if (users[id]['email'] === req.body['email']) {
       if (bcrypt.compareSync(req.body['password'], users[id]['password'])) {
-        res.session.user_id = users[id]['id'];
+        req.session.user_id = users[id]['id'];
         res.redirect('/urls');
         return;
       }
@@ -122,49 +164,6 @@ app.post('/login', (req, res) => {
   
 });
 
-app.post('/urls', (req, res) => {
-  if (isLoggedIn(req)) {
-    // generate another URL if shortURL alreadys exists in database
-    if(!req.body['longURL']) {
-      sendError(400, res, 'Error: Please specify a URL to shorten');
-      return;
-    }
-    let str = '';
-    if(!req.body['custom']) {
-      str = generateRandomString();
-      if (urlDatabase[str]) {
-        while (urlDatabase[str]) {
-          str = generateRandomString();
-        }
-      }
-    }
-    else {
-      str = req.body['custom'];
-    }
-
-    let longURL = prependHTTP(req.body['longURL']);
-    let user_id = req.session.user_id;
-
-    let d = new Date();
-    let today = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-
-    let visits = {
-      visits: 0,
-      unique: 0,
-      ip_addresses: []
-    };
-    console.log(visits);
-    urlDatabase[str] = {
-      longURL: longURL, 
-      user_id: user_id,
-      date: today,
-      visits: visits
-    };
-    res.redirect('/urls/' + str);
-    return;
-  }
-  sendError(401, res, "Error: must be logged in to access this page");
-});
 
 app.get('/urls/new', (req,res) => {
   templateVars.user = req.session.user_id;
@@ -176,7 +175,6 @@ app.get('/urls/new', (req,res) => {
   res.render('urls_new', templateVars);
 });
 
-//function(req, res)
 
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase.hasOwnProperty(req.params.id)) {
@@ -226,7 +224,7 @@ app.put("/urls/:id", (req, res) => {
 
 app.get('/u/:shortURL', (req, res) => {
   let shortURL = req.params.shortURL;
-  if (!urlDatabase[shortURL]){
+  if (urlDatabase[shortURL]){
     let dateTime = new Date().toLocaleString("en-US", {timeZone: "America/Vancouver"});
     if (urlDatabase[shortURL].visits.ip_addresses.length === 0) {
       urlDatabase[shortURL].visits.ip_addresses.push({
@@ -257,10 +255,7 @@ app.get('/u/:shortURL', (req, res) => {
   }
   sendError(404, res, "Error: This short URL has not been created");
 });
-/*app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-*/
+
 
 app.delete("/urls/:id/delete", (req, res) => {
   if (checkLoggedIn(req)) {
@@ -303,7 +298,7 @@ function prependHTTP(str){
     if (!str.includes(beginURL)){
       output = beginURL + str;
     }
-    return str;
+    return output;
   }
 }
 
@@ -320,7 +315,7 @@ function checkLoggedIn(req) {
 
 function userURLS(id) {
   let user_urls = [];
-  Object.keys(urlDatabase).forEach(user, i) => {
+  Object.keys(urlDatabase).forEach((user, i) => {
     if (urlDatabase[user].user_id === id) {
       user_urls.push({
         url_id: user, 
@@ -329,7 +324,7 @@ function userURLS(id) {
         visits: urlDatabase[user].visits
       });
     }
-  }
+  });
   return user_urls;
 }
 

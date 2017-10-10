@@ -7,22 +7,24 @@
       <td class="col-md-2">Date Created</td>
       <td class="col-md-4">Short URL</td>
       <td class="col-md-4">Long URL</td>
-      <td class="col-md-2">Unique visits</td>
-      <td class="col-md-3">&nbsp;</td>
+      <td class="col-md-2">Visits (Unique)</td>
+      <td class="col-md-3 ">&nbsp;</td>
     </tr>
     <tr>
       <td><%= urls[url].date %></td>
-      <td><a href="/u/<%= url %>">http://localhost/u/<%= url %></a></td>
+      <td>
+        <a href="/u/<%= url %>">http://localhost/u/<%= url %></a>
+      </td>
       <td>
         <form class="form-inline" method="POST" id="edit" action="/urls/<%= url %>?_method=PUT">
-          <input id="edit" name="updatedURL" value="<%= urls[url].longURL %>" class="input input-group"></input>
+          <input id="edit" name="updatedURL" value="<%= urls[url].longURL %>" class="input input-group">
           <button id="edit" class="btn btn-default btn-xs" type="submit">
             Update
           </button>
         </form>
       </td>
       <td>
-        <%= urls[templateVars.error = false].visits.visits %>
+        <%= urls[url].visits.visits %>
         <% if(urls[url].visits.unique) { %>
           (<%= urls[url].visits.unique %>)
         <% } else { %>
@@ -31,7 +33,7 @@
       </td>
       <td>
         <form class="form-inline" method="POST" id="delete" action="/urls/<%= url %>/delete?_method=DELETE">
-          <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
+          <button class="btn btn-danger btn-xs" id="delete" type="submit">&nbsp;x&nbsp;</button>
         </form>
       </td>
     </tr>

@@ -4,17 +4,17 @@
 <% } else { %>
 <table class="table">
   <% if(loggedIn) { %>
-    <tr>
-      <td class="col-md-2">Date Created</td>
-      <td class="col-md-4">Short URL</td>
-      <td class="col-md-4">Long URL</td>
-      <td class="col-md-2">Visits</td>
-      <td class="col-md-3">&nbsp;</td>
-    </tr>
-    <% user_urls.forEach((url, i) => { %>
+  <tr>
+    <td class="col-md-2">Date Created</td>
+    <td class="col-md-4">Short URL</td>
+    <td class="col-md-4">Long URL</td>
+    <td class="col-md-2">Visits (Unique)</td>
+    <td class="col-md-3">&nbsp;</td>
+  </tr>
+  <% user_urls.forEach((url, i) => { %>
     <tr>
       <td><%= url.date %></td>
-      <td><a href="/u/<%= url.urlID %>">http://localhost/u/<%= url.urlID %></a></td>
+      <td><a href="/u/<%= url.url_id %>">http://localhost/u/<%= url.url_id %></a></td>
       <td>
         <form class="form-inline" method="GET" id="update" action="/urls/<%= url.url_id %>">
           <label for="update"><%= url.url %></label>
@@ -33,7 +33,7 @@
       </td>
       <td>
         <form class="form-inline" method="POST" id="delete" action="/urls/<%= url.url_id %>/delete?_method=DELETE">
-          <button class="btn btn-default btn-xs" id="delete" type="submit">x</button>
+          <button class="btn btn-danger btn-xs" id="delete" type="submit">&nbsp;x&nbsp;</button>
         </form>
       </td>
     </tr>
@@ -41,3 +41,4 @@
   <% } %>
 </table>
 <% } %>
+<%- include partials/_footer %>

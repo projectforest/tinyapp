@@ -18,6 +18,7 @@
     "test": "echo error",
     "start": "node express_server.js"
   },
+  "keywords": [],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/projectforest/tinyapp.git"
